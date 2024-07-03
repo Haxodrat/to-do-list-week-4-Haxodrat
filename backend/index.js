@@ -1,3 +1,12 @@
+require("dotenv").config()
+
+const { MongoClient } = require('mongodb');
+
+console.log("env", process.env.USE_MONGO)
+const uri = 'mongodb://localhost:8080';
+const client = new MongoClient(uri);
+
+
 const express = require("express"),
        app = express(),
        port = process.env.PORT || 8080,
@@ -35,6 +44,13 @@ async function addItem (request, response) {
         await fs.writeFile("database.json", JSON.stringify(json))
         console.log('Successfully wrote to file') 
         response.sendStatus(200)
+        if (process.env.USE_MONGO) {
+            await client.connect();
+            console.log('Connected successfully to server');
+            const db = client.db("database.json");
+            const collection = db.collection(newTask);
+            collection.insertMany(newTask);
+        }
     } catch (err) {
         console.log("error: ", err)
         response.sendStatus(500)
